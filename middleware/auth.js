@@ -3,11 +3,16 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
+    let token = null;
     const header = req.headers.authorization;
-    if (!header || !header.startsWith('Bearer ')) {
+    if (header && header.startsWith('Bearer ')) {
+      token = header.split(' ')[1];
+    } else if (req.query.token) {
+      token = req.query.token;
+    }
+    if (!token) {
       return res.status(401).json({ message: 'No autorizado' });
     }
-    const token = header.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
     if (!user) {
