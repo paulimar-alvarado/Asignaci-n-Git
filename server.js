@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const User = require('./models/User');
 
 const authRoutes = require('./routes/auth');
 const manualRoutes = require('./routes/manuals');
@@ -34,8 +35,22 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('Conectado a MongoDB');
+    const adminCount = await User.countDocuments({ rol: 'admin' });
+    if (adminCount === 0) {
+      const admin = new User({
+        nombre: 'Administrador',
+        email: process.env.ADMIN_EMAIL || 'admin@fibextelecom.com',
+        password: process.env.ADMIN_PASSWORD || 'admin123',
+        rol: 'admin',
+        departamento: 'Sistemas',
+        cargo: 'Administrador',
+        telefono: ''
+      });
+      await admin.save();
+      console.log('Usuario admin creado');
+    }
     app.listen(process.env.PORT || 5000, () => {
       console.log(`Servidor corriendo en puerto ${process.env.PORT || 5000}`);
     });
